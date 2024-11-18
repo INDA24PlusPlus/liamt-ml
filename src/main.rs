@@ -1,4 +1,3 @@
-pub mod activation;
 pub mod layers;
 pub mod mnist;
 pub mod network;
@@ -16,6 +15,19 @@ fn main() {
     network.push_layer(Layers::relu());
     network.push_layer(Layers::dense(128, 10));
     network.push_layer(Layers::relu());
+    network.push_layer(Layers::output());
 
-    network.train(data.train_data, data.train_labels);
+    // loop through each array1 of a array2
+    for i in 0..data.train_data.len_of(Axis(0)) {
+        let inputs = data.train_data.slice(s![i, ..]).to_owned();
+        let targets = data.train_labels.slice(s![i]).to_owned();
+        let prediction = network.predict(inputs);
+        println!("Prediction: {:?}", prediction);
+
+        if i == 10 {
+            break;
+        }
+    }
+
+    //network.train(data.train_data, data.train_labels);
 }

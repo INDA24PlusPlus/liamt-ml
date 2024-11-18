@@ -11,12 +11,14 @@ impl Network {
     pub fn push_layer(&mut self, layer: Box<dyn Layer>) {
         self.layers.push(layer);
     }
-    pub fn train(&mut self, inputs: Array3<f32>, targets: Array1<f32>) {
-        for input in inputs.outer_iter() {
-            let mut output = input.to_owned();
-            for layer in &mut self.layers {
-                output = layer.forward(output);
-            }
-        }
+    pub fn predict(&mut self, inputs: Array1<f32>) -> Array1<f32> {
+        self.layers
+            .iter_mut()
+            .fold(inputs, |input, layer| layer.forward(input))
     }
+    /* pub fn predict(&mut self, inputs: Array2<f32>, targets: Array1<f32>) {
+        self.layers
+            .iter()
+            .fold(inputs, |input, layer| layer.forward(input));
+    } */
 }

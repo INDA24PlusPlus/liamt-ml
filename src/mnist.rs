@@ -2,17 +2,17 @@ use mnist::*;
 use ndarray::prelude::*;
 
 pub struct MNIST {
-    pub train_data: Array3<f32>,
+    pub train_data: Array2<f32>,
     pub train_labels: Array1<f32>,
-    pub validation_data: Array3<f32>,
+    pub validation_data: Array2<f32>,
     pub validation_labels: Array1<f32>,
-    pub test_data: Array3<f32>,
+    pub test_data: Array2<f32>,
     pub test_labels: Array1<f32>,
 }
 
 impl MNIST {
-    fn convert_images(images: Vec<u8>, len: usize) -> Array3<f32> {
-        Array3::from_shape_vec((len, 28, 28), images)
+    fn convert_images(images: Vec<u8>, len: usize) -> Array2<f32> {
+        Array2::from_shape_vec((len, 784), images)
             .expect("Error converting images to Array3 struct")
             .map(|x| *x as f32 / 256.0)
     }
