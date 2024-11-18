@@ -3,11 +3,11 @@ use ndarray::prelude::*;
 
 pub struct MNIST {
     pub train_data: Array3<f32>,
-    pub train_labels: Array2<f32>,
+    pub train_labels: Array1<f32>,
     pub validation_data: Array3<f32>,
-    pub validation_labels: Array2<f32>,
+    pub validation_labels: Array1<f32>,
     pub test_data: Array3<f32>,
-    pub test_labels: Array2<f32>,
+    pub test_labels: Array1<f32>,
 }
 
 impl MNIST {
@@ -17,8 +17,8 @@ impl MNIST {
             .map(|x| *x as f32 / 256.0)
     }
 
-    fn convert_labels(labels: Vec<u8>, len: usize) -> Array2<f32> {
-        Array2::from_shape_vec((len, 1), labels)
+    fn convert_labels(labels: Vec<u8>, len: usize) -> Array1<f32> {
+        Array1::from_shape_vec(len, labels)
             .expect("Error converting training labels to Array2 struct")
             .map(|x| *x as f32)
     }
