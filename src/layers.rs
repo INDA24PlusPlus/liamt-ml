@@ -11,6 +11,7 @@ impl Layers {
         let mut rng = rand::thread_rng();
         let weights = Array2::from_shape_fn((out_size, in_size), |_| rng.gen_range(-1.0..1.0));
         let biases = Array1::from_shape_fn(out_size, |_| rng.gen_range(-1.0..1.0));
+
         Box::new(DenseLayer { weights, biases })
     }
     pub fn sigmoid() -> Box<dyn Layer> {
