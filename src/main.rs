@@ -15,8 +15,8 @@ fn main() {
     network.push_layer(Layers::dense(10, 10));
     network.push_layer(Layers::softmax());
 
-    //network.train(data.train_data, data.train_labels, 16, 50, 0.002);
-    network.train(data.train_data, data.train_labels, 32, 10, 0.002);
+    network.train(data.train_data, data.train_labels, 16, 50, 0.002);
+    //network.train(data.train_data, data.train_labels, 32, 20, 0.002);
     println!("-----------");
     network.test(data.test_data, data.test_labels);
 }
