@@ -3,8 +3,8 @@ use rand::distributions::Uniform;
 use rand::Rng;
 
 pub trait Layer {
-    fn forward(&mut self, input: Array2<f32>) -> Array2<f32>;
-    fn backward(&mut self, grad_output: Array2<f32>, learning_rate: f32) -> Array2<f32>;
+    fn forward(&mut self, input: &Array2<f32>) -> Array2<f32>;
+    fn backward(&mut self, grad_output: &Array2<f32>, learning_rate: f32) -> Array2<f32>;
 }
 
 pub struct Layers {}
@@ -41,12 +41,12 @@ pub struct DenseLayer {
     last_input: Option<Array2<f32>>,
 }
 impl Layer for DenseLayer {
-    fn forward(&mut self, input: Array2<f32>) -> Array2<f32> {
+    fn forward(&mut self, input: &Array2<f32>) -> Array2<f32> {
         self.last_input = Some(input.clone());
 
         input.dot(&self.weights) + &self.biases
     }
-    fn backward(&mut self, grad_output: Array2<f32>, learning_rate: f32) -> Array2<f32> {
+    fn backward(&mut self, grad_output: &Array2<f32>, learning_rate: f32) -> Array2<f32> {
         // grad of loss with respect to weights
         let grad_weights = self
             .last_input
@@ -71,11 +71,11 @@ pub struct ReluLayer {
     last_input: Option<Array2<f32>>,
 }
 impl Layer for ReluLayer {
-    fn forward(&mut self, input: Array2<f32>) -> Array2<f32> {
+    fn forward(&mut self, input: &Array2<f32>) -> Array2<f32> {
         self.last_input = Some(input.clone());
         input.mapv(|x| x.max(0.0))
     }
-    fn backward(&mut self, grad_output: Array2<f32>, _learning_rate: f32) -> Array2<f32> {
+    fn backward(&mut self, grad_output: &Array2<f32>, _learning_rate: f32) -> Array2<f32> {
         grad_output
             * self
                 .last_input
@@ -88,14 +88,14 @@ impl Layer for ReluLayer {
 pub struct SoftMaxLayer {}
 impl Layer for SoftMaxLayer {
     // softmax to get output between 0 and 1
-    fn forward(&mut self, input: Array2<f32>) -> Array2<f32> {
+    fn forward(&mut self, input: &Array2<f32>) -> Array2<f32> {
         let max_vals = input.map_axis(Axis(1), |row| row.fold(f32::NEG_INFINITY, |a, &b| a.max(b)));
         let exp_data = (input - &max_vals.insert_axis(Axis(1))).mapv(f32::exp);
         let sum_exp = exp_data.sum_axis(Axis(1)).insert_axis(Axis(1));
         &exp_data / &sum_exp
     }
-    fn backward(&mut self, grad_output: Array2<f32>, _learning_rate: f32) -> Array2<f32> {
-        grad_output
+    fn backward(&mut self, grad_output: &Array2<f32>, _learning_rate: f32) -> Array2<f32> {
+        grad_output.clone()
     }
 }
 
@@ -104,7 +104,7 @@ pub struct DropoutLayer {
     mask: Array2<f32>,
 }
 impl Layer for DropoutLayer {
-    fn forward(&mut self, input: Array2<f32>) -> Array2<f32> {
+    fn forward(&mut self, input: &Array2<f32>) -> Array2<f32> {
         self.mask = input.mapv(|_| {
             if rand::thread_rng().gen::<f32>() < self.rate {
                 0.0
@@ -115,7 +115,7 @@ impl Layer for DropoutLayer {
 
         input * &self.mask
     }
-    fn backward(&mut self, grad_output: Array2<f32>, _learning_rate: f32) -> Array2<f32> {
+    fn backward(&mut self, grad_output: &Array2<f32>, _learning_rate: f32) -> Array2<f32> {
         grad_output * &self.mask
     }
 }
