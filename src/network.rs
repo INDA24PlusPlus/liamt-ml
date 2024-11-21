@@ -129,4 +129,40 @@ impl Network {
             println!("Epoch: {} Error: {} Acc: {:.2}%", e, error, acc * 100.0);
         }
     }
+
+    pub fn nice(
+        &mut self,
+        inputs: Array2<f32>,
+        targets: Array2<f32>,
+        inputs_val: Array2<f32>,
+        targets_val: Array2<f32>,
+        batch_size: usize,
+        epochs: usize,
+        learning_rate: f32,
+    ) {
+        for e in 0..epochs {
+            let mut correct_preds = 0;
+            let mut error = 0.0;
+            let batch_iter = self.batch_iterator(inputs.clone(), targets.clone(), batch_size);
+
+            for (input, target) in batch_iter.iter() {
+                let prediction = self.forward(input.clone());
+                error = self.cross_entropy_error(prediction.clone(), target.clone());
+                correct_preds += self.correct_predictions(prediction.clone(), target.clone());
+                self.backward(prediction - target, learning_rate);
+            }
+
+            let acc = correct_preds as f32 / inputs.len_of(Axis(0)) as f32;
+            println!(
+                "Epoch: {} Error: {} Acc(Train): {:.2}%",
+                e,
+                error,
+                acc * 100.0
+            );
+
+            self.test(inputs_val.clone(), targets_val.clone());
+
+            println!("-----------");
+        }
+    }
 }

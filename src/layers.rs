@@ -1,4 +1,5 @@
 use ndarray::prelude::*;
+use rand::distributions::Uniform;
 use rand::Rng;
 
 pub trait Layer {
@@ -10,8 +11,9 @@ pub struct Layers {}
 impl Layers {
     pub fn dense(in_size: usize, out_size: usize) -> Box<dyn Layer> {
         let mut rng = rand::thread_rng();
-        let weights = Array2::from_shape_fn((in_size, out_size), |_| rng.gen_range(-1.0..1.0));
-        let biases = Array1::from_shape_fn(out_size, |_| rng.gen_range(-1.0..1.0));
+        let weights =
+            Array2::from_shape_fn((in_size, out_size), |_| rng.sample(Uniform::new(-1.0, 1.0)));
+        let biases = Array1::from_shape_fn(out_size, |_| rng.sample(Uniform::new(-1.0, 1.0)));
 
         Box::new(DenseLayer {
             weights,
@@ -24,6 +26,12 @@ impl Layers {
     }
     pub fn softmax() -> Box<dyn Layer> {
         Box::new(SoftMaxLayer {})
+    }
+    pub fn dropout(rate: f32) -> Box<dyn Layer> {
+        Box::new(DropoutLayer {
+            rate,
+            mask: Array2::zeros((0, 0)),
+        })
     }
 }
 
@@ -88,5 +96,26 @@ impl Layer for SoftMaxLayer {
     }
     fn backward(&mut self, grad_output: Array2<f32>, _learning_rate: f32) -> Array2<f32> {
         grad_output
+    }
+}
+
+pub struct DropoutLayer {
+    rate: f32,
+    mask: Array2<f32>,
+}
+impl Layer for DropoutLayer {
+    fn forward(&mut self, input: Array2<f32>) -> Array2<f32> {
+        self.mask = input.mapv(|_| {
+            if rand::thread_rng().gen::<f32>() < self.rate {
+                0.0
+            } else {
+                1.0
+            }
+        });
+
+        input * &self.mask
+    }
+    fn backward(&mut self, grad_output: Array2<f32>, _learning_rate: f32) -> Array2<f32> {
+        grad_output * &self.mask
     }
 }
