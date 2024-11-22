@@ -21,7 +21,7 @@ fn main() {
     network.push_layer(Layers::dense(64, 10));
     network.push_layer(Layers::softmax());
 
-    //network.set_optimizer(Optimizers::adam());
+    network.set_optimizer(Optimizers::adam(0.9, 0.999, 1e-8));
 
     network.train(&data.train_data, &data.train_labels, 32, 500, 0.001);
     println!("-----------");

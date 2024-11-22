@@ -2,14 +2,14 @@ use crate::{layers::*, optimizer::*};
 use ndarray::prelude::*;
 pub struct Network {
     layers: Vec<Box<dyn Layer>>,
-    pub optimizer: Option<Box<dyn Optimizer>>,
+    pub optimizer: Box<dyn Optimizer>,
 }
 
 impl Network {
     pub fn new() -> Network {
         Network {
             layers: Vec::new(),
-            optimizer: None,
+            optimizer: Optimizers::default(),
         }
     }
     pub fn push_layer(&mut self, layer: Box<dyn Layer>) {
@@ -17,7 +17,7 @@ impl Network {
     }
 
     pub fn set_optimizer(&mut self, optimizer: Box<dyn Optimizer>) {
-        self.optimizer = Some(optimizer);
+        self.optimizer = optimizer;
     }
 
     fn forward(&mut self, input: &Array2<f32>) -> Array2<f32> {
@@ -26,10 +26,10 @@ impl Network {
             .fold(input.clone(), |input, layer| layer.forward(&input))
     }
 
-    fn backward(&mut self, error: &Array2<f32>, learning_rate: f32) -> Array2<f32> {
+    fn backward(&mut self, error: &Array2<f32>) -> Array2<f32> {
         let mut grad_output = error.clone();
         for layer in self.layers.iter_mut().rev() {
-            grad_output = layer.backward(&grad_output, learning_rate);
+            grad_output = layer.backward(&grad_output);
         }
         grad_output
     }
@@ -127,12 +127,14 @@ impl Network {
             let mut error = 0.0;
             let batch_iter = self.batch_iterator(inputs, targets, batch_size);
 
+            self.optimizer.clear();
+
             for (input, target) in batch_iter.iter() {
                 let prediction = self.forward(input);
                 error = self.cross_entropy_error(&prediction, target);
                 correct_preds += self.correct_predictions(&prediction, target);
-                let grad = self.backward(&(prediction - target), learning_rate);
-                self.optimizer.as_mut().unwrap().step(&grad, learning_rate);
+                self.backward(&(prediction - target));
+                self.optimizer.step(&mut self.layers, learning_rate);
             }
 
             let acc = correct_preds as f32 / inputs.len_of(Axis(0)) as f32;
@@ -140,7 +142,7 @@ impl Network {
         }
     }
 
-    pub fn nice(
+    /* pub fn nice(
         &mut self,
         inputs: &Array2<f32>,
         targets: &Array2<f32>,
@@ -174,5 +176,5 @@ impl Network {
 
             println!("-----------");
         }
-    }
+    } */
 }
