@@ -1,23 +1,15 @@
-use crate::{layers::*, optimizer::*};
+use crate::layers::*;
 use ndarray::prelude::*;
 pub struct Network {
     layers: Vec<Box<dyn Layer>>,
-    pub optimizer: Option<Box<dyn Optimizer>>,
 }
 
 impl Network {
     pub fn new() -> Network {
-        Network {
-            layers: Vec::new(),
-            optimizer: None,
-        }
+        Network { layers: Vec::new() }
     }
     pub fn push_layer(&mut self, layer: Box<dyn Layer>) {
         self.layers.push(layer);
-    }
-
-    pub fn set_optimizer(&mut self, optimizer: Box<dyn Optimizer>) {
-        self.optimizer = Some(optimizer);
     }
 
     fn forward(&mut self, input: &Array2<f32>) -> Array2<f32> {
@@ -131,8 +123,7 @@ impl Network {
                 let prediction = self.forward(input);
                 error = self.cross_entropy_error(&prediction, target);
                 correct_preds += self.correct_predictions(&prediction, target);
-                let grad = self.backward(&(prediction - target), learning_rate);
-                self.optimizer.as_mut().unwrap().step(&grad, learning_rate);
+                self.backward(&(prediction - target), learning_rate);
             }
 
             let acc = correct_preds as f32 / inputs.len_of(Axis(0)) as f32;
